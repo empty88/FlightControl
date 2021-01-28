@@ -91,15 +91,15 @@ void FlightControl_::Initialise()
 		_buttonValueArraySize = _buttonCount / 8;
 		if ((_buttonCount % 8) > 0)
 		{
-			_buttonValuesArraySize++;
+			_buttonValueArraySize++;
 		}
-		_buttonValues = new uint8_t[_buttonValuesArraySize];
+		_buttonValues = new uint8_t[_buttonValueArraySize];
 	}
 	if (_throttleCount > 0)
 	{
 		_throttleValues = new int16_t[_throttleCount];
 	}
-	_hidReportSize = _buttonValuesArraySize;
+	_hidReportSize = _buttonValueArraySize;
 	_hidReportSize += 4;//2 Bytes per Axis
 	if (_useRudder)_hidReportSize += 2;//2 bytes for the rudder
 	if (_throttleCount > 0)_hidReportSize += 2 * _throttleCount;//2 bytes per throttle
@@ -113,7 +113,7 @@ void FlightControl_::Initialise()
 	{
 		for (int index = 0; index < _throttleCount; index++)
 		{
-			_throttleValue[index] = 0;
+			_throttleValues[index] = 0;
 		}
 	}
 	if (_useBrakes)
@@ -121,9 +121,9 @@ void FlightControl_::Initialise()
 		_brakeLeftAxis = 0;
 		_brakeRightAxis = 0;
 	}
-	if (_buttoncount > 0)
+	if (_buttonCount > 0)
 	{
-		for (int index = 0; index < _buttonValuesArraySize; index++)
+		for (int index = 0; index < _buttonValueArraySize; index++)
 		{
 			_buttonValues[index] = 0;
 		}
@@ -241,7 +241,7 @@ void FlightControl_::SendState()
 	// Build Data Packet
 	if (_buttonCount > 0)
 	{
-		for (; index < _buttonValuesArraySize; index++)
+		for (; index < _buttonValueArraySize; index++)
 		{
 			data[index] = _buttonValues[index];
 		}

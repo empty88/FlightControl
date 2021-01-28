@@ -20,9 +20,10 @@
   ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
   SOFTWARE.
  */
-
 #ifndef DYNAMIC_HID_h
 #define DYNAMIC_HID_h
+
+#define USBCON//COMMENT OUT BEFORE USE
 
 #include <stdint.h>
 #include <Arduino.h>
@@ -42,6 +43,11 @@
 #if defined(USBCON)
 
 #define _USING_DYNAMIC_HID
+//#ifdef USB_PRODUCT
+//#undef USB_PRODUCT
+//#endif
+//#define USB_PRODUCT "Flight Controller"
+
 
 // DYNAMIC_HID 'Driver'
 // ------------
@@ -113,6 +119,8 @@ public:
   int begin(void);
   int SendReport(uint8_t id, const void* data, int len);
   void AppendDescriptor(DynamicHIDSubDescriptor* node);
+
+  bool SendStringDescriptor(u8* stringP, u8 stringLen, uint8_t flags);
 
 protected:
   // Implementation of the PluggableUSBModule

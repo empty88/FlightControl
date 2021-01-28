@@ -1,7 +1,7 @@
 #ifndef FLIGHTCONTROL_h
 #define FLIGHTCONTROL_h
 
-#define _USING_DYNAMIC_HID//Comment this OUT before checking in
+//#define _USING_DYNAMIC_HID//Comment this OUT before checking in
 
 #include "DynamicHID/DynamicHID.h"
 #include "DynamicHID/DefineHID.h"
@@ -60,7 +60,7 @@ private:
 	int16_t*				_throttleValues = NULL;
 
 	uint8_t         _buttonCount;
-	uint8_t         _buttonValuesArraySize = 0;
+	uint8_t         _buttonValueArraySize = 0;
 	uint8_t					_hatSwitchCount;
 	//uint8_t				_includeAxisFlags;
 	//uint8_t				_includeSimulatorFlags;

@@ -46,12 +46,42 @@ int DynamicHID_::getInterface(uint8_t* interfaceCount)
 	return USB_SendControl(0, &hidInterface, sizeof(hidInterface));
 }
 
+bool DynamicHID_::SendStringDescriptor(u8* stringP, u8 stringLen, uint8_t flags)
+{
+	USB_SendControl(2 + stringLen * 2);
+	USB_SendControl(3);
+	bool pgm = flags & TRANSFER_PGM;
+	for (u8 i = 0; i < stringLen; i++) 
+	{
+		bool r = USB_SendControl(pgm ? pgm_read_byte(&stringP[i]) : stringP[i]);
+		r &= USB_SendControl(0); // high byte
+		if (!r) 
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 int DynamicHID_::getDescriptor(USBSetup& setup)
 {
+	if (setup.wValueH == USB_STRING_DESCRIPTOR_TYPE)
+	{
+		switch (setup.wValueL)
+		{
+		case IPRODUCT:
+			u8* productString = (u8*)&"Flight Controller";
+			return SendStringDescriptor(productString, strlen(productString), 0) ? 1 : 0;
+		case ISERIAL:
+			u8* serialString = (u8*)&"v1.0.0";//MAX LEN 20
+			return SendStringDescriptor(serialString, strlen(serialString), 0) ? 1 : 0;
+		case IMANUFACTURER:
+			u8* manufacturerString = (u8*)&"Raptyr Electronics";
+			return SendStringDescriptor(manufacturerString, strlen(manufacturerString), 0) ? 1 : 0;
+		}
+	}
 	switch (setup.bmRequestType)
 	{
-		default:
-			break;
 		//HID Class Descriptor Request
 		case REQUEST_DEVICETOHOST_STANDARD_INTERFACE:
 			switch (setup.wValueH)
@@ -67,7 +97,7 @@ int DynamicHID_::getDescriptor(USBSetup& setup)
 						DynamicHIDSubDescriptor* node;
 						for (node = rootNode; node; node=node->next)
 						{
-							int result = USB_SendControl((node->InProgMem ? TRANSFER_PGM : 0),node->data,node->length);
+							int result = USB_SendControl((node->inProgMem ? TRANSFER_PGM : 0),node->data,node->length);
 							if (result == -1)
 							{
 								return -1;
