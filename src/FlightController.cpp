@@ -1,20 +1,41 @@
 #include "FlightController.h"
 #if defined(_USING_DYNAMIC_HID)
 
-FlightControl_::FlightControl_(uint8_t hidReportID)
+FlightControl_::FlightControl_(uint8_t hidReportID,uint8_t controller)
 {
 	_hidReportID = hidReportID;
+	_controller = controller;
 }
 void FlightControl_::Initialise()
 {
 	//BUILD HID Report Descriptor
 	uint8_t descriptor[150];
 	int descriptorIndex = 0;
-
 	DESCRIPTOR(descriptor, descriptorIndex, USAGE_PAGE, PAGE_GENERIC_DESKTOP)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_JOYSTICK)
+	DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_JOYSTICK)
 		DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_APPLICATION)
 		DESCRIPTOR(descriptor, descriptorIndex, REPORT_ID, _hidReportID)
+	if (_buttonCount > 0)
+	{
+		uint8_t buttonsInLastByte = _buttonCount % 8;
+		uint8_t paddingBits = buttonsInLastByte > 0 ? 8 - buttonsInLastByte : 0;
+		DESCRIPTOR(descriptor,descriptorIndex,USAGE_PAGE,PAGE_BUTTON)
+		DESCRIPTOR(descriptor,descriptorIndex,USAGE_MIN,01)
+		DESCRIPTOR(descriptor,descriptorIndex,USAGE_MAX,_buttonCount)
+		DESCRIPTOR(descriptor,descriptorIndex,LOGICAL_MIN,0)
+		DESCRIPTOR(descriptor,descriptorIndex,LOGICAL_MAX,1)
+		DESCRIPTOR(descriptor,descriptorIndex,REPORT_SIZE,1)
+		DESCRIPTOR(descriptor,descriptorIndex,REPORT_COUNT,_buttonCount)
+		DESCRIPTOR(descriptor,descriptorIndex,UNIT_EXP,0)
+		DESCRIPTOR(descriptor,descriptorIndex,UNIT,0)
+		DESCRIPTOR(descriptor,descriptorIndex,INPUT,IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+		if (paddingBits > 0)
+		{
+			DESCRIPTOR(descriptor,descriptorIndex,REPORT_SIZE,1)
+			DESCRIPTOR(descriptor,descriptorIndex,REPORT_COUNT,paddingBits)
+			DESCRIPTOR(descriptor,descriptorIndex,INPUT,IO_CONSTANT | IO_VARIABLE | IO_ABSOLUTE)
+		}
+	}
 		DESCRIPTOR(descriptor, descriptorIndex, USAGE_PAGE, PAGE_GENERIC_DESKTOP)
 		DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_POINTER)
 		DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MIN16, 0x01, 0x80)
@@ -22,33 +43,86 @@ void FlightControl_::Initialise()
 		DESCRIPTOR(descriptor, descriptorIndex, REPORT_SIZE, 0x10)
 		DESCRIPTOR(descriptor, descriptorIndex, REPORT_COUNT, 0x02)
 		DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_PHYSICAL)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_X)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_Y)
-		DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_X)
+			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_Y)
+			DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
 		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE_PAGE, PAGE_SIMULATION_CONTROLS)
-		DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MIN16, 0x01, 0x80)
-		DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MAX16, 0xFF, 0x7F)
-		DESCRIPTOR(descriptor, descriptorIndex, REPORT_SIZE, 0x10)
-		DESCRIPTOR(descriptor, descriptorIndex, REPORT_COUNT, 5)
-		DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_PHYSICAL)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_RUDDER)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
-		DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
-		DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+		if (_useRudder || _throttleCount > 0)
+		{
+			uint8_t simulationCount = (_useRudder ? 1 : 0) + _throttleCount;
+			DESCRIPTOR(descriptor, descriptorIndex, USAGE_PAGE, PAGE_SIMULATION_CONTROLS)
+				DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MIN16, 0x01, 0x80)
+				DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MAX16, 0xFF, 0x7F)
+				DESCRIPTOR(descriptor, descriptorIndex, REPORT_SIZE, 0x10)
+				DESCRIPTOR(descriptor, descriptorIndex, REPORT_COUNT, simulationCount)
+				DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_PHYSICAL)
+			if (_useRudder)
+			{
+					DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_RUDDER)
+			}
+			if (_throttleCount > 0)
+			{
+				for (uint8_t i = 0; i < _throttleCount; i++)
+				{
+					DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
+				}
+			}
+					DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+				DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
+		}
 		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
-		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
-		//END BUILD HID Report Descriptor
+	//END BUILD HID Report Descriptor
 
-		// Create a copy of the HID Report Descriptor template that is just the right size
-		uint8_t* hidReportDescriptor = new uint8_t[descriptorIndex];
+	// Create a copy of the HID Report Descriptor template that is just the right size
+	uint8_t* hidReportDescriptor = new uint8_t[descriptorIndex];
 	memcpy(hidReportDescriptor, descriptor, descriptorIndex);
 
 	// Register HID Report Description
 	DynamicHIDSubDescriptor* node = new DynamicHIDSubDescriptor(hidReportDescriptor, descriptorIndex, false);
 	DynamicHID().AppendDescriptor(node);
+
+	if (_buttonCount > 0)
+	{
+		_buttonValueArraySize = _buttonCount / 8;
+		if ((_buttonCount % 8) > 0)
+		{
+			_buttonValuesArraySize++;
+		}
+		_buttonValues = new uint8_t[_buttonValuesArraySize];
+	}
+	if (_throttleCount > 0)
+	{
+		_throttleValues = new int16_t[_throttleCount];
+	}
+	_hidReportSize = _buttonValuesArraySize;
+	_hidReportSize += 4;//2 Bytes per Axis
+	if (_useRudder)_hidReportSize += 2;//2 bytes for the rudder
+	if (_throttleCount > 0)_hidReportSize += 2 * _throttleCount;//2 bytes per throttle
+	if (_useBrakes) _hidReportSize += 4;//2 bytes per brake
+
+	//Initialise
+	_aileronAxis = 0;
+	_elevatorAxis = 0;
+	if (_useRudder) _rudderAxis = 0;
+	if (_throttleCount)
+	{
+		for (int index = 0; index < _throttleCount; index++)
+		{
+			_throttleValue[index] = 0;
+		}
+	}
+	if (_useBrakes)
+	{
+		_brakeLeftAxis = 0;
+		_brakeRightAxis = 0;
+	}
+	if (_buttoncount > 0)
+	{
+		for (int index = 0; index < _buttonValuesArraySize; index++)
+		{
+			_buttonValues[index] = 0;
+		}
+	}
 }
 void FlightControl_::Begin(bool startAutoSend = true)
 {
@@ -106,9 +180,9 @@ void FlightControl_::setRudder(int16_t value)
 	_rudderAxis = value;
 	if (_autoSendState) SendState();
 }
-void FlightControl_::setThrottle(int16_t value)
+void FlightControl_::setThrottle(uint8_t throttle,int16_t value)
 {
-	_throttleAxis = value;
+	_throttleValues[throttle] = value;
 	if (_autoSendState) SendState();
 }
 void FlightControl_::setBrakeLeft(int16_t value)
@@ -160,15 +234,28 @@ void FlightControl_::SendState()
 	uint8_t data[_hidReportSize];
 	int index = 0;
 	// Build Data Packet
+	if (_buttonCount > 0)
+	{
+		for (; index < _buttonValuesArraySize; index++)
+		{
+			data[index] = _buttonValues[index];
+		}
+	}
 	index += buildAndSet16BitValue(_aileronAxis, _aileronPhysicalMinimum, _aileronPhysicalMaximum, _aileronAxisLogicalMinimum, _aileronAxisLogicalMaximum, &(data[index]));
 	index += buildAndSet16BitValue(_elevatorAxis, _elevatorPhysicalMinimum, _elevatorPhysicalMaximum, _elevatorAxisLogicalMinimum, _elevatorAxisLogicalMaximum, &(data[index]));
-	index += buildAndSet16BitValue(_rudderAxis, _rudderPhysicalMinimum, _rudderPhysicalMaximum, _rudderLogicalMinimum, _rudderLogicalMaximum, &(data[index]));
-	index += buildAndSet16BitValue(_throttleAxis, _throttlePhysicalMinimum, _throttlePhysicalMaximum, _throttleLogicalMinimum, _throttleLogicalMaximum, &(data[index]));
-	index += buildAndSet16BitValue(_throttleAxis, _throttlePhysicalMinimum, _throttlePhysicalMaximum, _throttleLogicalMinimum, _throttleLogicalMaximum, &(data[index]));
-	index += buildAndSet16BitValue(_throttleAxis, _throttlePhysicalMinimum, _throttlePhysicalMaximum, _throttleLogicalMinimum, _throttleLogicalMaximum, &(data[index]));
-	index += buildAndSet16BitValue(_throttleAxis, _throttlePhysicalMinimum, _throttlePhysicalMaximum, _throttleLogicalMinimum, _throttleLogicalMaximum, &(data[index]));
-	//index += buildAndSet16BitValue(_brakeLeftAxis,_brakeLeftPhysicalMinimum,_brakeLeftPhysicalMaximum,_brakeLeftLogicalMinimum,_brakeLeftLogicalMaximum,&(data[index]));
-	//index += buildAndSet16BitValue(_brakeRightAxis,_brakeRightPhysicalMinimum,_brakeRightPhysicalMaximum,_brakeRightLogicalMinimum,_brakeRightLogicalMaximum,&(data[index]));
+	if (_useBrakes)
+	{
+		index += buildAndSet16BitValue(_brakeLeftAxis,_brakeLeftPhysicalMinimum,_brakeLeftPhysicalMaximum,_brakeLeftLogicalMinimum,_brakeLeftLogicalMaximum,&(data[index]));
+		index += buildAndSet16BitValue(_brakeRightAxis,_brakeRightPhysicalMinimum,_brakeRightPhysicalMaximum,_brakeRightLogicalMinimum,_brakeRightLogicalMaximum,&(data[index]));
+	}
+	if (_useRudder) { index += buildAndSet16BitValue(_rudderAxis, _rudderPhysicalMinimum, _rudderPhysicalMaximum, _rudderLogicalMinimum, _rudderLogicalMaximum, &(data[index])); }
+	if (_throttleCount > 0)
+	{
+		for (uint8_t i = 0; i < _throttleCount; i++)
+		{
+			index += buildAndSet16BitValue(_throttleValues[i], _throttlePhysicalMinimum, _throttlePhysicalMaximum, _throttleLogicalMinimum, _throttleLogicalMaximum, &(data[index]));
+		}
+	}
 	//END Build Data Packet
 	DynamicHID().SendReport(_hidReportID, data, _hidReportSize);
 }
