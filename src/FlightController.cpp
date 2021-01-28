@@ -45,6 +45,11 @@ void FlightControl_::Initialise()
 		DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_PHYSICAL)
 			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_X)
 			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_Y)
+		if (_useBrakes)
+		{
+			DESCRIPTOR(descriptor, descriptorIndex,USAGE,GENERIC_RX)
+			DESCRIPTOR(descriptor, descriptorIndex,USAGE,GENERIC_RY)
+		}
 			DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
 		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
 		if (_useRudder || _throttleCount > 0)
