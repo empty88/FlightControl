@@ -25,8 +25,6 @@
 //================================================================================
 
 #define FLIGHTCONTROL_DEFAULT_REPORT_ID         0x03
-#define FLIGHTCONTROL_AUX_REPORT_ID							(FLIGHTCONTROL_DEFAULT_REPORT_ID+1)
-#define FLIGHTCONTROL_AUX2_REPORT_ID						(FLIGHTCONTROL_DEFAULT_REPORT_ID+1)
 #define FLIGHTCONTROL_DEFAULT_BUTTON_COUNT        32
 #define FLIGHTCONTROL_DEFAULT_AXIS_MINIMUM         0
 #define FLIGHTCONTROL_DEFAULT_AXIS_MAXIMUM      1023
@@ -96,6 +94,7 @@ private:
 	int16_t         _brakeRightLogicalMaximum = FLIGHTCONTROL_LOGICAL_AXIS_MAXIMUM;
 
 	uint8_t         _hidReportID;
+	uint8_t					_joystickType;
 	uint8_t         _hidReportSize;
 	uint8_t					_controller;
 protected:
@@ -103,7 +102,7 @@ protected:
 	int buildAndSet16BitValue(int16_t value, int16_t valueMinimum, int16_t valueMaximum, int16_t actualMinimum, int16_t actualMaximum, uint8_t dataLocation[]);
 
 public:
-	FlightControl_(uint8_t hidReportID = FLIGHTCONTROL_DEFAULT_REPORT_ID,uint8_t controller = 0);
+	FlightControl_(uint8_t hidReportID = FLIGHTCONTROL_DEFAULT_REPORT_ID,uint8_t joystickType = GENERIC_JOYSTICK);
 	void Initialise();
 	void Begin(bool startAutoSend = true);
 	void End();
@@ -141,7 +140,6 @@ public:
 
 	void AddButton(int count = 1);
 	void AddRudder();
-	void AddThrottle();
 	void AddThrottle(bool reverseThrustButton);
 	void AddBrakes();
 

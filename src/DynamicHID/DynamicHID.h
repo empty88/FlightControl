@@ -23,7 +23,7 @@
 #ifndef DYNAMIC_HID_h
 #define DYNAMIC_HID_h
 
-#define USBCON//COMMENT OUT BEFORE USE
+//#define USBCON//COMMENT OUT BEFORE USE
 
 #include <stdint.h>
 #include <Arduino.h>

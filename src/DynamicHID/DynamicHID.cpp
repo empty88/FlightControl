@@ -69,49 +69,71 @@ int DynamicHID_::getDescriptor(USBSetup& setup)
 	{
 		switch (setup.wValueL)
 		{
-		case IPRODUCT:
-			u8* productString = (u8*)&"Flight Controller";
-			return SendStringDescriptor(productString, strlen(productString), 0) ? 1 : 0;
-		case ISERIAL:
-			u8* serialString = (u8*)&"v1.0.0";//MAX LEN 20
-			return SendStringDescriptor(serialString, strlen(serialString), 0) ? 1 : 0;
-		case IMANUFACTURER:
-			u8* manufacturerString = (u8*)&"Raptyr Electronics";
-			return SendStringDescriptor(manufacturerString, strlen(manufacturerString), 0) ? 1 : 0;
+			case 2:
+				//Setup.wValueL == 2 does in fact == 2
+				u8 productStringArray[] = { 'F','l','i','g','h','t',' ','C','o','n','t','r','o','l','l','e','r' };
+				bool prResult = SendStringDescriptor(productStringArray, 17, 0);
+				return prResult ? 1 : 0;
+			case 1:
+				//For some UNKNOWN reason setup.wValueL == 1 does NOT == 1
+				u8 * manufacturerString = (u8*)&"Raptyr Electronics";
+				bool mnResult = SendStringDescriptor(manufacturerString, strlen(manufacturerString), 0);
+				return mnResult ? 1 : 0;
+			case 3:
+				//For some UNKNOWN reason setup.wValueL == 3 does NOT == 3
+				u8 * serialString = (u8*)&"HID100";//MAX LEN 20
+				bool srResult = SendStringDescriptor(serialString, strlen(serialString), 0);
+				return srResult ? 1 : 0;
+			case 4:
+				u8 *mainCtrl = (u8*)&"Flight Controller Main";
+				return SendStringDescriptor(mainCtrl, strlen(mainCtrl), 0) ? 1 : 0;
+			case 5:
+				u8 *aux1Ctrl = (u8*)&"Flight Controller Aux1";
+				return SendStringDescriptor(aux1Ctrl, strlen(aux1Ctrl), 0) ? 1 : 0;
+			case 6:
+				u8 *aux2Ctrl = (u8*)&"Flight Controller Aux2";
+				return SendStringDescriptor(aux2Ctrl, strlen(aux2Ctrl), 0) ? 1 : 0;
+			case 7:
+				u8 * aileron = (u8*)&"Aileron";
+				return SendStringDescriptor(aileron, strlen(aileron), 0) ? 1 : 0;
+			case 8:
+				u8 * elevator= (u8*)&"Elevator";
+				return SendStringDescriptor(elevator, strlen(elevator), 0) ? 1 : 0;
+			case 9:
+				u8 *leftBrakeCtrl = (u8*)&"Left Toe Brake";
+				return SendStringDescriptor(leftBrakeCtrl, strlen(leftBrakeCtrl), 0) ? 1 : 0;
+			case 10:
+				u8 *rightBrakeCtrl = (u8*)&"Right Toe Brake";
+				return SendStringDescriptor(rightBrakeCtrl, strlen(rightBrakeCtrl), 0) ? 1 : 0;
 		}
 	}
-	switch (setup.bmRequestType)
+	if (setup.bmRequestType == REQUEST_DEVICETOHOST_STANDARD_INTERFACE)
 	{
 		//HID Class Descriptor Request
-		case REQUEST_DEVICETOHOST_STANDARD_INTERFACE:
-			switch (setup.wValueH)
+		//case REQUEST_DEVICETOHOST_STANDARD_INTERFACE:
+		if (setup.wValueH == DYNAMIC_HID_REPORT_DESCRIPTOR_TYPE)
+		{
+			//Check for the current interface number
+			//wIndex=interface number for HID Class Descriptor
+			if (setup.wIndex == pluggedInterface)
 			{
-				default:
-					break;
-				case DYNAMIC_HID_REPORT_DESCRIPTOR_TYPE:
-					//Check for the current interface number
-					//wIndex=interface number for HID Class Descriptor
-					if (setup.wIndex == pluggedInterface)
+				int total = 0;
+				DynamicHIDSubDescriptor* node;
+				for (node = rootNode; node; node = node->next)
+				{
+					int result = USB_SendControl((node->inProgMem ? TRANSFER_PGM : 0), node->data, node->length);
+					if (result == -1)
 					{
-						int total = 0;
-						DynamicHIDSubDescriptor* node;
-						for (node = rootNode; node; node=node->next)
-						{
-							int result = USB_SendControl((node->inProgMem ? TRANSFER_PGM : 0),node->data,node->length);
-							if (result == -1)
-							{
-								return -1;
-							}
-							total += result;
-						}
-						// Reset the protocol on reenumeration. Normally the host should not assume the state of the protocol
-						// due to the USB specs, but Windows and Linux just assumes its in report mode.
-						protocol = DYNAMIC_HID_REPORT_PROTOCOL;
-						return total;
+						return -1;
 					}
-					break;
+					total += result;
+				}
+				// Reset the protocol on reenumeration. Normally the host should not assume the state of the protocol
+				// due to the USB specs, but Windows and Linux just assumes its in report mode.
+				protocol = DYNAMIC_HID_REPORT_PROTOCOL;
+				return total;
 			}
-			break;
+		}
 	}
 	return 0;
 }
@@ -123,6 +145,7 @@ uint8_t DynamicHID_::getShortName(char *name)
 	name[2] = 'D';
 	name[3] = 'A' + (descriptorSize & 0x0F);
 	name[4] = 'A' + ((descriptorSize >> 4) & 0x0F);
+
 	return 5;
 }
 
