@@ -139,6 +139,11 @@ public:
 		_brakeRightPhysicalMaximum = maximum;
 	}
 
+	void AddButton(int count = 1);
+	void AddRudder();
+	void AddThrottle();
+	void AddThrottle(bool reverseThrustButton);
+	void AddBrakes();
 
 	// Set Axis Values
 	void setAileronAxis(int16_t value);

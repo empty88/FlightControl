@@ -41,7 +41,7 @@ void FlightControl_::Initialise()
 		DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MIN16, 0x01, 0x80)
 		DESCRIPTOR3(descriptor, descriptorIndex, LOGICAL_MAX16, 0xFF, 0x7F)
 		DESCRIPTOR(descriptor, descriptorIndex, REPORT_SIZE, 0x10)
-		DESCRIPTOR(descriptor, descriptorIndex, REPORT_COUNT, 0x02)
+		DESCRIPTOR(descriptor, descriptorIndex, REPORT_COUNT, _useBrakes ? 0x04 : 0x02)
 		DESCRIPTOR(descriptor, descriptorIndex, COLLECTION, COLLECTION_PHYSICAL)
 			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_X)
 			DESCRIPTOR(descriptor, descriptorIndex, USAGE, GENERIC_Y)
@@ -137,6 +137,28 @@ void FlightControl_::Begin(bool startAutoSend = true)
 
 void FlightControl_::End()
 {
+}
+
+void FlightControl_::AddButton(int count = 1)
+{
+	_buttonCount += count;
+}
+
+void FlightControl_::AddRudder()
+{
+	_useRudder = true;
+}
+void FlightControl_::AddBrakes()
+{
+	_useBrakes = true;
+}
+void FlightControl_::AddThrottle(bool reverseThrustButton)
+{
+	_throttleCount++;
+	if (reverseThrustButton)
+	{
+		_buttonCount++;
+	}
 }
 
 void FlightControl_::setButton(uint8_t button, uint8_t value)
