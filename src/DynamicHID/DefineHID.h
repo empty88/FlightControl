@@ -65,8 +65,8 @@
 #define _FEATURE(size) 			  (0xB0 | size)
 #define _END_COLLECTION(size)	(0xC0 | size)
 
-#define INPUT 			    _INPUT(1)
-#define OUTPUT 			    _OUTPUT(1)
+#define HIDINPUT 			    _INPUT(1)
+#define HIDOUTPUT 			    _OUTPUT(1)
 #define COLLECTION 		  _COLLECTION(1)
 #define FEATURE 		    _FEATURE(1)
 #define END_COLLECTION 	_END_COLLECTION(0)

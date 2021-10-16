@@ -1,7 +1,7 @@
 #include "FlightController.h"
 #if defined(_USING_DYNAMIC_HID)
 
-FlightControl_::FlightControl_(uint8_t hidReportID,uint8_t joystickType = GENERIC_JOYSTICK)
+FlightControl_::FlightControl_(uint8_t hidReportID,uint8_t joystickType)
 {
 	_hidReportID = hidReportID;
 	_joystickType = joystickType;
@@ -29,12 +29,12 @@ void FlightControl_::Initialise()
 		DESCRIPTOR(descriptor,descriptorIndex,REPORT_COUNT,_buttonCount)
 		DESCRIPTOR(descriptor,descriptorIndex,UNIT_EXP,0)
 		DESCRIPTOR(descriptor,descriptorIndex,UNIT,0)
-		DESCRIPTOR(descriptor,descriptorIndex,INPUT,IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+		DESCRIPTOR(descriptor,descriptorIndex,HIDINPUT,IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
 		if (paddingBits > 0)
 		{
 			DESCRIPTOR(descriptor,descriptorIndex,REPORT_SIZE,1)
 			DESCRIPTOR(descriptor,descriptorIndex,REPORT_COUNT,paddingBits)
-			DESCRIPTOR(descriptor,descriptorIndex,INPUT,IO_CONSTANT | IO_VARIABLE | IO_ABSOLUTE)
+			DESCRIPTOR(descriptor,descriptorIndex,HIDINPUT,IO_CONSTANT | IO_VARIABLE | IO_ABSOLUTE)
 		}
 	}
 		DESCRIPTOR(descriptor, descriptorIndex, USAGE_PAGE, PAGE_GENERIC_DESKTOP)
@@ -61,7 +61,7 @@ void FlightControl_::Initialise()
 			DESCRIPTOR(descriptor, descriptorIndex,USAGE,GENERIC_RX)
 			DESCRIPTOR(descriptor, descriptorIndex,USAGE,GENERIC_RY)
 		}
-			DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+			DESCRIPTOR(descriptor, descriptorIndex, HIDINPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
 		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
 		if (_useRudder || _throttleCount > 0)
 		{
@@ -83,7 +83,7 @@ void FlightControl_::Initialise()
 					DESCRIPTOR(descriptor, descriptorIndex, USAGE, SIMULATION_THROTTLE)
 				}
 			}
-					DESCRIPTOR(descriptor, descriptorIndex, INPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
+					DESCRIPTOR(descriptor, descriptorIndex, HIDINPUT, IO_DATA | IO_VARIABLE | IO_ABSOLUTE)
 				DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
 		}
 		DESCRIPTOR1(descriptor, descriptorIndex, END_COLLECTION)
@@ -140,7 +140,7 @@ void FlightControl_::Initialise()
 		}
 	}
 }
-void FlightControl_::Begin(bool startAutoSend = true)
+void FlightControl_::Begin(bool startAutoSend)
 {
 	_autoSendState = startAutoSend;
 	SendState();
@@ -150,7 +150,7 @@ void FlightControl_::End()
 {
 }
 
-void FlightControl_::AddButton(int count = 1)
+void FlightControl_::AddButton(int count)
 {
 	_buttonCount += count;
 }
@@ -295,6 +295,6 @@ void FlightControl_::SendState()
 		}
 	}
 	//END Build Data Packet
-	DynamicHID().SendReport(_hidReportID, data, _hidReportSize);
+	DynamicHID_().SendReport(_hidReportID, data, _hidReportSize);
 }
 #endif
