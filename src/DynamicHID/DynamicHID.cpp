@@ -75,36 +75,54 @@ int DynamicHID_::getDescriptor(USBSetup& setup)
 				bool prResult = SendStringDescriptor(productStringArray, 17, 0);
 				return prResult ? 1 : 0;
 			case 1:
+			{
 				//For some UNKNOWN reason setup.wValueL == 1 does NOT == 1
-				u8 * manufacturerString = (u8*)&"Raptyr Electronics";
+				u8* manufacturerString = (u8*)&"Raptyr Electronics";
 				bool mnResult = SendStringDescriptor(manufacturerString, strlen(manufacturerString), 0);
-				return mnResult ? 1 : 0;
+				return mnResult ? 1 : 0; 
+			}
 			case 3:
+			{
 				//For some UNKNOWN reason setup.wValueL == 3 does NOT == 3
-				u8 * serialString = (u8*)&"HID100";//MAX LEN 20
+				u8* serialString = (u8*)&"HID100";//MAX LEN 20
 				bool srResult = SendStringDescriptor(serialString, strlen(serialString), 0);
 				return srResult ? 1 : 0;
+			}
 			case 4:
-				u8 *mainCtrl = (u8*)&"Flight Controller Main";
+			{
+				u8* mainCtrl = (u8*)&"Flight Controller Main";
 				return SendStringDescriptor(mainCtrl, strlen(mainCtrl), 0) ? 1 : 0;
+			}
 			case 5:
-				u8 *aux1Ctrl = (u8*)&"Flight Controller Aux1";
+			{
+				u8* aux1Ctrl = (u8*)&"Flight Controller Aux1";
 				return SendStringDescriptor(aux1Ctrl, strlen(aux1Ctrl), 0) ? 1 : 0;
+			}
 			case 6:
-				u8 *aux2Ctrl = (u8*)&"Flight Controller Aux2";
+			{
+				u8* aux2Ctrl = (u8*)&"Flight Controller Aux2";
 				return SendStringDescriptor(aux2Ctrl, strlen(aux2Ctrl), 0) ? 1 : 0;
+			}
 			case 7:
-				u8 * aileron = (u8*)&"Aileron";
+			{
+				u8* aileron = (u8*)&"Aileron";
 				return SendStringDescriptor(aileron, strlen(aileron), 0) ? 1 : 0;
+			}
 			case 8:
-				u8 * elevator= (u8*)&"Elevator";
+			{
+				u8* elevator = (u8*)&"Elevator";
 				return SendStringDescriptor(elevator, strlen(elevator), 0) ? 1 : 0;
+			}
 			case 9:
-				u8 *leftBrakeCtrl = (u8*)&"Left Toe Brake";
+			{
+				u8* leftBrakeCtrl = (u8*)&"Left Toe Brake";
 				return SendStringDescriptor(leftBrakeCtrl, strlen(leftBrakeCtrl), 0) ? 1 : 0;
+			}
 			case 10:
-				u8 *rightBrakeCtrl = (u8*)&"Right Toe Brake";
+			{
+				u8* rightBrakeCtrl = (u8*)&"Right Toe Brake";
 				return SendStringDescriptor(rightBrakeCtrl, strlen(rightBrakeCtrl), 0) ? 1 : 0;
+			}
 		}
 	}
 	if (setup.bmRequestType == REQUEST_DEVICETOHOST_STANDARD_INTERFACE)

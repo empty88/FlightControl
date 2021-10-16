@@ -1,4 +1,5 @@
 #include "FlightController.h"
+#include "DynamicHID/DynamicHID.h"
 #if defined(_USING_DYNAMIC_HID)
 
 FlightControl_::FlightControl_(uint8_t hidReportID,uint8_t joystickType)
@@ -295,6 +296,6 @@ void FlightControl_::SendState()
 		}
 	}
 	//END Build Data Packet
-	DynamicHID_().SendReport(_hidReportID, data, _hidReportSize);
+	DynamicHID().SendReport(_hidReportID, data, _hidReportSize);
 }
 #endif
