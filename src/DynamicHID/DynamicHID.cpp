@@ -70,58 +70,60 @@ int DynamicHID_::getDescriptor(USBSetup& setup)
 		switch (setup.wValueL)
 		{
 			case 2:
+			{
 				//Setup.wValueL == 2 does in fact == 2
 				u8 productStringArray[] = { 'F','l','i','g','h','t',' ','C','o','n','t','r','o','l','l','e','r' };
 				bool prResult = SendStringDescriptor(productStringArray, 17, 0);
 				return prResult ? 1 : 0;
+			}
 			case 1:
 			{
 				//For some UNKNOWN reason setup.wValueL == 1 does NOT == 1
-				u8* manufacturerString = (u8*)&"Raptyr Electronics";
-				bool mnResult = SendStringDescriptor(manufacturerString, strlen(manufacturerString), 0);
+				u8 manufacturerStringArray[] = {'R','a','p','t','y','r',' ','E','l','e','c','t','r','o','n','i','c','s'};
+				bool mnResult = SendStringDescriptor(manufacturerStringArray,18 , 0);
 				return mnResult ? 1 : 0; 
 			}
 			case 3:
 			{
 				//For some UNKNOWN reason setup.wValueL == 3 does NOT == 3
-				u8* serialString = (u8*)&"HID100";//MAX LEN 20
-				bool srResult = SendStringDescriptor(serialString, strlen(serialString), 0);
+				u8 serialStringArray[] = {'H','I','D','1','0','0'};//MAX LEN 20
+				bool srResult = SendStringDescriptor(serialStringArray, 6, 0);
 				return srResult ? 1 : 0;
 			}
 			case 4:
 			{
-				u8* mainCtrl = (u8*)&"Flight Controller Main";
-				return SendStringDescriptor(mainCtrl, strlen(mainCtrl), 0) ? 1 : 0;
+				u8 mainCtrlArray[] = {'F','l','i','g','h','t',' ','C','o','n','t','r','o','l','l','e','r',' ','M','a','i','n'};
+				return SendStringDescriptor(mainCtrlArray, 22, 0) ? 1 : 0;
 			}
 			case 5:
 			{
-				u8* aux1Ctrl = (u8*)&"Flight Controller Aux1";
-				return SendStringDescriptor(aux1Ctrl, strlen(aux1Ctrl), 0) ? 1 : 0;
+				u8 aux1CtrlArray[] = {'F','l','i','g','h','t',' ','C','o','n','t','r','o','l','l','e','r',' ','A','u','x','1'};
+				return SendStringDescriptor(aux1CtrlArray, 22, 0) ? 1 : 0;
 			}
 			case 6:
 			{
-				u8* aux2Ctrl = (u8*)&"Flight Controller Aux2";
-				return SendStringDescriptor(aux2Ctrl, strlen(aux2Ctrl), 0) ? 1 : 0;
+				u8 aux2CtrlArray[] = {'F','l','i','g','h','t',' ','C','o','n','t','r','o','l','l','e','r',' ','A','u','x','2'};
+				return SendStringDescriptor(aux2CtrlArray,22, 0) ? 1 : 0;
 			}
 			case 7:
 			{
-				u8* aileron = (u8*)&"Aileron";
-				return SendStringDescriptor(aileron, strlen(aileron), 0) ? 1 : 0;
+				u8 aileronArray[] = {'A','i','l','e','r','o','n'};
+				return SendStringDescriptor(aileronArray, 7, 0) ? 1 : 0;
 			}
 			case 8:
 			{
-				u8* elevator = (u8*)&"Elevator";
-				return SendStringDescriptor(elevator, strlen(elevator), 0) ? 1 : 0;
+				u8 elevatorArray[] = {'E','l','e','v','a','t','o','r'};
+				return SendStringDescriptor(elevatorArray, 8, 0) ? 1 : 0;
 			}
 			case 9:
 			{
-				u8* leftBrakeCtrl = (u8*)&"Left Toe Brake";
-				return SendStringDescriptor(leftBrakeCtrl, strlen(leftBrakeCtrl), 0) ? 1 : 0;
+				u8 leftBrakeCtrlArray[] = {'L','e','f','t',' ','T','o','e',' ','B','r','a','k','e'};
+				return SendStringDescriptor(leftBrakeCtrlArray, 14, 0) ? 1 : 0;
 			}
 			case 10:
 			{
-				u8* rightBrakeCtrl = (u8*)&"Right Toe Brake";
-				return SendStringDescriptor(rightBrakeCtrl, strlen(rightBrakeCtrl), 0) ? 1 : 0;
+				u8 rightBrakeCtrlArray[] = {'R','i','g','h','t',' ','T','o','e',' ','B','r','a','k','e'};
+				return SendStringDescriptor(rightBrakeCtrlArray, 15, 0) ? 1 : 0;
 			}
 		}
 	}

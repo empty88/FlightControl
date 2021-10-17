@@ -3,8 +3,8 @@
 
 //#define _USING_DYNAMIC_HID//Comment this OUT before checking in
 
-#include "DynamicHID/DynamicHID.h"
-#include "DynamicHID/DefineHID.h"
+#include <DynamicHID.h>
+#include <DefineHID.h>
 
 #if ARDUINO < 10606
 #error The Flight Control library requires Arduino IDE 1.6.6 or greater. Please update your IDE.
