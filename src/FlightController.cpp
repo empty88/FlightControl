@@ -1,5 +1,5 @@
 #include <FlightController.h>
-#include <DynamicHID.h>
+#include "DynamicHID/DefineHID.h"
 #if defined(_USING_DYNAMIC_HID)
 
 FlightControl_::FlightControl_(uint8_t hidReportID,uint8_t joystickType)
